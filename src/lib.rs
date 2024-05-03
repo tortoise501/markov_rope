@@ -1,24 +1,60 @@
-use std::{collections::HashMap, path::Path};
+use std::collections::HashMap;
 
 use rand::Rng;
-
+/// A struct used to generate text 
 pub struct MarkovChain<'a>{
     map: Option<HashMap<&'a str,HashMap<&'a str,u32>>>,
 }
+
+const DEFAULT_TEXT: &str ="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut fringilla maximus nulla quis gravida. Suspendisse potenti. Curabitur sem leo, tempus vitae rutrum in, dignissim nec sem. Etiam at varius dolor, eget efficitur mauris. Donec id diam ullamcorper, varius ante at, malesuada ante. Quisque egestas ac libero quis elementum. Maecenas vitae ex nisl. Donec urna eros, convallis ut purus congue, efficitur dapibus tortor. Pellentesque euismod laoreet dolor et posuere. Mauris viverra ante et mattis mollis. Donec pellentesque et ligula vitae ultricies. Nullam auctor dignissim diam id gravida. Maecenas vehicula pulvinar urna. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Nam non viverra sem. Nulla ex augue, bibendum quis purus a, eleifend viverra nisl. In tempus ante quis nunc scelerisque mollis. Donec facilisis elit nec augue convallis viverra. Nam vel pharetra massa. Phasellus at consequat elit, et euismod ante. Suspendisse vestibulum ante a lorem tempus rutrum. Nunc euismod mi quis tellus consectetur placerat. Nullam vitae est et turpis aliquam convallis. Praesent egestas molestie urna, ac malesuada risus blandit sed. Nam quam ligula, iaculis non justo nec, pharetra pharetra diam. Donec at tempus ipsum. Quisque sit amet tempor massa. Vivamus rutrum enim mi, quis suscipit sem laoreet quis. Vivamus magna enim, posuere id pharetra quis, elementum eget ante. Curabitur tincidunt pulvinar magna convallis ullamcorper. Integer quis mattis risus. Duis vel quam vitae urna eleifend rhoncus in at metus. Aliquam pulvinar magna imperdiet neque mattis, ac dapibus sem dignissim. Nullam sit amet interdum magna, vel venenatis est. Vestibulum tristique ultrices ipsum eu venenatis. Phasellus congue malesuada sagittis. ";
+
 impl<'a> MarkovChain<'a> {
+    /// Creates new empty chain. 
+    /// You need to generate map to generate new text if tou created a chain using `new()`
+    /// # Example
+    /// ```
+    /// let mut chain = MarkovChain::new();
+    /// chain.generate_map("text used to generate your map");
+    /// println!("{}",chain.generate_text(10).unwrap());
+    /// ```
     pub fn new() -> MarkovChain<'a>{
         MarkovChain{
             map:None,
         }
     }
-    pub fn from(text: &'a String) -> MarkovChain<'a> {
+    /// Generates a markov chain with map generated using string literal
+    /// 
+    /// # Example
+    /// ```
+    /// let chain = MarkovChain::from_string("your string here");
+    /// println!("{}",chain.generate_text(10).unwrap());
+    /// ```
+    pub fn from_string(source_text: &'a str) -> MarkovChain<'a> {
         let mut chain = MarkovChain{
             map:None,
         };
-        chain.generate_map(text);
+        chain.generate_map(source_text);
         chain
     }
-    pub fn generate_map(&mut self,text: &'a String){
+    ///
+    /// Generates a markov chain with map generated using default text
+    /// 
+    /// # Example
+    /// ```
+    /// let chain = MarkovChain::default();
+    /// println!("{}",chain.generate_text(10).unwrap());
+    /// ```
+    pub fn default() -> MarkovChain<'a> {
+        let mut chain = MarkovChain{
+            map:None,
+        };
+        chain.generate_map(DEFAULT_TEXT);
+        chain
+    }
+    ///
+    /// Generates a map from given text. Map is later used to generate text
+    /// 
+    pub fn generate_map(&mut self,text: &'a str){
         if self.map.is_none(){
             self.map = Some(HashMap::new());
         }
@@ -98,7 +134,17 @@ impl<'a> MarkovChain<'a> {
         }
         todo!()
     }
-    pub fn generate_text(self,word_count:u32)-> Result<String,String>{
+    /// Generates text using previously generated map. Returns error if map is not generated
+    /// 
+    /// # Example
+    /// ```
+    /// let chain = MarkovChain::from_string("your string here");
+    /// match chain.generate_text(10){
+    ///     Ok(generated_text) => println!("{}",generated_text),
+    ///     Err(e) => panic!("failed to generate text{}",e),
+    /// };
+    /// ```
+    pub fn generate_text(&self,word_count:u32)-> Result<String,String>{
         if self.map.iter().count() < 1{
             return Err("map is not created".to_string());
         }
@@ -107,27 +153,21 @@ impl<'a> MarkovChain<'a> {
         for _ in 1..word_count{
             let word = self.get_next_after(last_word.as_str());
             last_word = word;
-            // last_word.push(' ');
             answer.push_str(last_word.as_str());
             answer.push(' ');
         } 
         Ok(answer)
     }
 }
-pub enum TrainingText {
-    String(String),
-    Path(Box<Path>),
-    Default,
-}
 
 #[cfg(test)]
 mod test {
-    use crate::MarkovChain;
+    use super::*;
 
     #[test]
     fn test_text_generation(){
         let sample_text = "I an a string used to generate text for unit test.".to_string();
-        let chain = MarkovChain::from(&sample_text);
+        let chain = MarkovChain::from_string(&sample_text);
         let word_count = 10;
         let generated_text = chain.generate_text(word_count);
         assert!(generated_text.is_ok());
@@ -135,6 +175,7 @@ mod test {
         let generated_text_word_count = generated_text.split(' ').count();
         assert_eq!(generated_text_word_count,word_count as usize);
     }
+    #[test]
     fn test_for_no_map(){
         let chain = MarkovChain::new();
         let res = chain.generate_text(50);
