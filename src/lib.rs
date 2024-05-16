@@ -162,7 +162,7 @@ impl<'a> MarkovChain<'a> {
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    use super::MarkovChain;
 
     #[test]
     fn test_text_generation(){

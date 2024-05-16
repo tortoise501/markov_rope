@@ -2,8 +2,10 @@
 name = "markov_rope"
 version = "0.1.0"
 edition = "2021"
+description = "a library used to generate random chain of words based on an example text"
+license = "MIT OR Apache-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rand ={  }
+rand = "0.8.5"
